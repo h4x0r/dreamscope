@@ -16,6 +16,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const wantsListeningRef = useRef(false);
 
   useEffect(() => {
     const SR =
@@ -53,7 +54,12 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       };
 
       recognition.onend = () => {
-        setIsListening(false);
+        if (wantsListeningRef.current) {
+          // Browser ended recognition unexpectedly — auto-restart
+          recognition.start();
+        } else {
+          setIsListening(false);
+        }
       };
 
       recognitionRef.current = recognition;
@@ -62,6 +68,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
   const start = useCallback(() => {
     if (recognitionRef.current && !isListening) {
+      wantsListeningRef.current = true;
       setTranscript("");
       recognitionRef.current.start();
       setIsListening(true);
@@ -70,6 +77,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
   const stop = useCallback(() => {
     if (recognitionRef.current && isListening) {
+      wantsListeningRef.current = false;
       recognitionRef.current.stop();
       setIsListening(false);
     }

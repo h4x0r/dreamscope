@@ -60,6 +60,32 @@ describe("useSpeechRecognition", () => {
     expect(mockInstance.stop).toHaveBeenCalled();
   });
 
+  it("stays listening when recognition ends unexpectedly (auto-restarts)", () => {
+    const { result } = renderHook(() => useSpeechRecognition());
+    act(() => result.current.start());
+    expect(result.current.isListening).toBe(true);
+
+    // Simulate browser firing onend without user calling stop
+    act(() => {
+      mockInstance.onend?.();
+    });
+
+    // Should still be listening (auto-restarted)
+    expect(result.current.isListening).toBe(true);
+    // Recognition.start should have been called again
+    expect(mockInstance.start).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops listening when user explicitly calls stop", () => {
+    const { result } = renderHook(() => useSpeechRecognition());
+    act(() => result.current.start());
+    act(() => result.current.stop());
+
+    // Now onend fires after stop — should NOT restart
+    expect(result.current.isListening).toBe(false);
+    expect(mockInstance.start).toHaveBeenCalledTimes(1);
+  });
+
   it("resets transcript when reset is called", () => {
     const { result } = renderHook(() => useSpeechRecognition());
     act(() => result.current.start());
