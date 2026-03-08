@@ -1,4 +1,31 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const PROGRESS_MESSAGES = [
+  "Reading your dream narrative...",
+  "Identifying key symbols...",
+  "Applying Jungian framework...",
+  "Analyzing cognitive patterns...",
+  "Evaluating clinical indicators...",
+  "Mapping symbol connections...",
+  "Synthesizing across frameworks...",
+  "Crafting trauma-informed language...",
+  "Preparing your analysis...",
+];
+
 export default function LoadingAnimation() {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) =>
+        prev < PROGRESS_MESSAGES.length - 1 ? prev + 1 : prev
+      );
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex flex-col items-center py-16">
       <div className="relative w-24 h-24">
@@ -9,9 +36,17 @@ export default function LoadingAnimation() {
           <div className="w-4 h-4 rounded-full bg-dream-primary animate-pulse" />
         </div>
       </div>
-      <p className="mt-8 text-dream-muted text-sm animate-pulse">
-        Analyzing through 3 psychological frameworks...
+      <p className="mt-8 text-dream-muted text-sm transition-opacity duration-500">
+        {PROGRESS_MESSAGES[messageIndex]}
       </p>
+      <div className="mt-4 w-64 h-1 bg-dream-surface rounded-full overflow-hidden">
+        <div
+          className="h-full bg-dream-primary rounded-full transition-all duration-700 ease-out"
+          style={{
+            width: `${((messageIndex + 1) / PROGRESS_MESSAGES.length) * 100}%`,
+          }}
+        />
+      </div>
     </div>
   );
 }
