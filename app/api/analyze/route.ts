@@ -54,9 +54,12 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeDream(trimmed);
     return NextResponse.json(analysis);
   } catch (error) {
-    console.error("Analysis error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Analysis error:", message);
+    console.error("ANTHROPIC_API_KEY set:", !!process.env.ANTHROPIC_API_KEY);
+    console.error("ANTHROPIC_API_KEY length:", process.env.ANTHROPIC_API_KEY?.length ?? 0);
     return NextResponse.json(
-      { error: "Analysis failed. Please try again." },
+      { error: "Analysis failed. Please try again.", debug: message },
       { status: 500 }
     );
   }
