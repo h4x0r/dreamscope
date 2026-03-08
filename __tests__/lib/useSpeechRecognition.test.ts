@@ -86,6 +86,24 @@ describe("useSpeechRecognition", () => {
     expect(mockInstance.start).toHaveBeenCalledTimes(1);
   });
 
+  it("stays listening when a transient error fires followed by onend", () => {
+    const { result } = renderHook(() => useSpeechRecognition());
+    act(() => result.current.start());
+    expect(result.current.isListening).toBe(true);
+
+    // Browser fires onerror (e.g. "aborted") then onend
+    act(() => {
+      mockInstance.onerror?.({ error: "aborted" });
+    });
+    act(() => {
+      mockInstance.onend?.();
+    });
+
+    // Should still be listening — auto-restarted
+    expect(result.current.isListening).toBe(true);
+    expect(mockInstance.start).toHaveBeenCalledTimes(2);
+  });
+
   it("resets transcript when reset is called", () => {
     const { result } = renderHook(() => useSpeechRecognition());
     act(() => result.current.start());

@@ -48,7 +48,8 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
-        if (event.error !== "no-speech") {
+        // Only kill listening for fatal errors when user didn't request recording
+        if (!wantsListeningRef.current && event.error !== "no-speech") {
           setIsListening(false);
         }
       };
@@ -56,7 +57,13 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognition.onend = () => {
         if (wantsListeningRef.current) {
           // Browser ended recognition unexpectedly — auto-restart
-          recognition.start();
+          try {
+            recognition.start();
+          } catch {
+            // start() can throw if called too rapidly
+            wantsListeningRef.current = false;
+            setIsListening(false);
+          }
         } else {
           setIsListening(false);
         }
