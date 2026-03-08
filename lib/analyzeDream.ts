@@ -6,7 +6,7 @@ export async function analyzeDream(transcript: string): Promise<DreamAnalysis> {
   const anthropic = new Anthropic();
 
   const message = await anthropic.messages.create({
-    model: "claude-3-5-haiku-latest",
+    model: "claude-haiku-4-5-20250514",
     max_tokens: 4096,
     system: DREAM_ANALYSIS_SYSTEM_PROMPT,
     messages: [
