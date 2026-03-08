@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeDream } from "@/lib/analyzeDream";
 import { checkRateLimit } from "@/lib/rateLimit";
 
+export const maxDuration = 60;
+
 const MIN_TRANSCRIPT_LENGTH = 20;
 const MAX_TRANSCRIPT_LENGTH = 5000;
 
