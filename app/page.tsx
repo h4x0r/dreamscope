@@ -173,6 +173,17 @@ export default function Home() {
           />
         )}
 
+        {isListening && transcript && (
+          <div className="mt-8">
+            <h3 className="text-sm text-dream-muted mb-2 text-left">
+              Live transcript:
+            </h3>
+            <p className="w-full bg-dream-surface border border-dream-muted/20 rounded-xl p-4 text-dream-text text-left text-sm min-h-[4rem]">
+              {transcript}
+            </p>
+          </div>
+        )}
+
         {transcript && !isListening && (
           <div className="mt-8">
             <h3 className="text-sm text-dream-muted mb-2 text-left">

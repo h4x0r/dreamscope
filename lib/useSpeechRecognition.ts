@@ -17,6 +17,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const wantsListeningRef = useRef(false);
+  const finalTranscriptRef = useRef("");
 
   useEffect(() => {
     const SR =
@@ -31,19 +32,17 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
 
-      let finalTranscript = "";
-
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
-            finalTranscript += result[0].transcript + " ";
+            finalTranscriptRef.current += result[0].transcript + " ";
           } else {
             interim += result[0].transcript;
           }
         }
-        setTranscript((finalTranscript + interim).trim());
+        setTranscript((finalTranscriptRef.current + interim).trim());
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -76,6 +75,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const start = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       wantsListeningRef.current = true;
+      finalTranscriptRef.current = "";
       setTranscript("");
       recognitionRef.current.start();
       setIsListening(true);
