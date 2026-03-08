@@ -54,9 +54,10 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeDream(trimmed);
     return NextResponse.json(analysis);
   } catch (error) {
-    console.error("Analysis error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Analysis error:", msg);
     return NextResponse.json(
-      { error: "Analysis failed. Please try again." },
+      { error: "Analysis failed. Please try again.", _debug: msg },
       { status: 500 }
     );
   }
