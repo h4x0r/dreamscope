@@ -36,15 +36,17 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
 
-      recognition.onaudiostart = () => {
+      const rec = recognition as unknown as Record<string, unknown>;
+
+      rec.onaudiostart = () => {
         setStatus("Microphone active — listening...");
       };
 
-      (recognition as unknown as Record<string, unknown>).onspeechstart = () => {
+      rec.onspeechstart = () => {
         setStatus("Speech detected — transcribing...");
       };
 
-      (recognition as unknown as Record<string, unknown>).onspeechend = () => {
+      rec.onspeechend = () => {
         setStatus("Speech ended — processing...");
       };
 
