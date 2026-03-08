@@ -7,6 +7,7 @@ interface UseSpeechRecognitionReturn {
   isListening: boolean;
   transcript: string;
   error: string;
+  status: string;
   start: () => void;
   stop: () => void;
   reset: () => void;
@@ -17,6 +18,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const wantsListeningRef = useRef(false);
   const finalTranscriptRef = useRef("");
@@ -33,6 +35,18 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognition.interimResults = true;
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
+
+      recognition.onaudiostart = () => {
+        setStatus("Microphone active — listening...");
+      };
+
+      (recognition as unknown as Record<string, unknown>).onspeechstart = () => {
+        setStatus("Speech detected — transcribing...");
+      };
+
+      (recognition as unknown as Record<string, unknown>).onspeechend = () => {
+        setStatus("Speech ended — processing...");
+      };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interim = "";
@@ -90,6 +104,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       finalTranscriptRef.current = "";
       setTranscript("");
       setError("");
+      setStatus("Starting recognition...");
       recognitionRef.current.start();
       setIsListening(true);
     }
@@ -107,5 +122,5 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     setTranscript("");
   }, []);
 
-  return { isSupported, isListening, transcript, error, start, stop, reset };
+  return { isSupported, isListening, transcript, error, status, start, stop, reset };
 }

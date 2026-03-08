@@ -16,6 +16,7 @@ export default function Home() {
     isListening,
     transcript: speechTranscript,
     error: speechError,
+    status: speechStatus,
     start,
     stop,
     reset,
@@ -159,6 +160,10 @@ export default function Home() {
           <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
             {speechError}
           </div>
+        )}
+
+        {isListening && speechStatus && (
+          <p className="mt-2 text-dream-muted text-xs">{speechStatus}</p>
         )}
 
         {!isListening && (
