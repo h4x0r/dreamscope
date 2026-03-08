@@ -22,6 +22,12 @@ export async function analyzeDream(transcript: string): Promise<DreamAnalysis> {
     throw new Error("Unexpected response from analysis engine");
   }
 
-  const analysis: DreamAnalysis = JSON.parse(content.text);
+  // Strip markdown code fences if present (e.g. ```json ... ```)
+  let text = content.text.trim();
+  if (text.startsWith("```")) {
+    text = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  }
+
+  const analysis: DreamAnalysis = JSON.parse(text);
   return analysis;
 }

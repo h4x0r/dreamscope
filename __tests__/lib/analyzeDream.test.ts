@@ -77,6 +77,16 @@ describe("analyzeDream", () => {
     ).rejects.toThrow("Unexpected response");
   });
 
+  it("strips markdown code fences from response", async () => {
+    const wrapped = "```json\n" + JSON.stringify(VALID_RESPONSE) + "\n```";
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: "text", text: wrapped }],
+    });
+
+    const result = await analyzeDream("I was flying over the ocean at sunset");
+    expect(result).toHaveProperty("title", "Test Dream");
+  });
+
   it("throws on invalid JSON response", async () => {
     mockCreate.mockResolvedValueOnce({
       content: [{ type: "text", text: "not valid json {{{" }],
