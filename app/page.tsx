@@ -15,6 +15,7 @@ export default function Home() {
     isSupported,
     isListening,
     transcript: speechTranscript,
+    error: speechError,
     start,
     stop,
     reset,
@@ -152,6 +153,12 @@ export default function Home() {
             Voice recording is not supported in this browser. Type your dream
             instead.
           </p>
+        )}
+
+        {speechError && (
+          <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+            {speechError}
+          </div>
         )}
 
         {!isListening && (

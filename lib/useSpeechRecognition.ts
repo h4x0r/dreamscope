@@ -6,6 +6,7 @@ interface UseSpeechRecognitionReturn {
   isSupported: boolean;
   isListening: boolean;
   transcript: string;
+  error: string;
   start: () => void;
   stop: () => void;
   reset: () => void;
@@ -15,6 +16,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [error, setError] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const wantsListeningRef = useRef(false);
   const finalTranscriptRef = useRef("");
@@ -47,10 +49,20 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
-        // Only kill listening for fatal errors when user didn't request recording
-        if (!wantsListeningRef.current && event.error !== "no-speech") {
+        if (event.error === "not-allowed") {
+          setError("Microphone access was denied. Please allow microphone permission.");
+          wantsListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === "no-speech") {
+          // Transient — ignored, auto-restart will handle it
+        } else if (event.error === "audio-capture") {
+          setError("No microphone detected. Please check your audio input.");
+          wantsListeningRef.current = false;
+          setIsListening(false);
+        } else if (!wantsListeningRef.current) {
           setIsListening(false);
         }
+        // Other transient errors (aborted, network) — let onend auto-restart
       };
 
       recognition.onend = () => {
@@ -77,6 +89,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       wantsListeningRef.current = true;
       finalTranscriptRef.current = "";
       setTranscript("");
+      setError("");
       recognitionRef.current.start();
       setIsListening(true);
     }
@@ -94,5 +107,5 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     setTranscript("");
   }, []);
 
-  return { isSupported, isListening, transcript, start, stop, reset };
+  return { isSupported, isListening, transcript, error, start, stop, reset };
 }
