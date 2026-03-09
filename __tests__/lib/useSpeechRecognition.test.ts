@@ -7,9 +7,12 @@ class MockSpeechRecognition {
   interimResults = false;
   lang = "";
   maxAlternatives = 1;
+  onstart: (() => void) | null = null;
   onresult: ((event: unknown) => void) | null = null;
   onerror: ((event: unknown) => void) | null = null;
   onend: (() => void) | null = null;
+  // Allow arbitrary event handler assignments (onaudiostart, onspeechstart, etc.)
+  [key: string]: unknown;
 
   start = jest.fn();
   stop = jest.fn().mockImplementation(() => {
@@ -22,12 +25,14 @@ describe("useSpeechRecognition", () => {
   let mockInstance: MockSpeechRecognition;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockInstance = new MockSpeechRecognition();
     (window as unknown as Record<string, unknown>).webkitSpeechRecognition =
       jest.fn().mockImplementation(() => mockInstance);
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     delete (window as unknown as Record<string, unknown>)
       .webkitSpeechRecognition;
     delete (window as unknown as Record<string, unknown>).SpeechRecognition;
@@ -69,10 +74,13 @@ describe("useSpeechRecognition", () => {
     act(() => {
       mockInstance.onend?.();
     });
+    // Advance past the 100ms restart delay
+    act(() => {
+      jest.advanceTimersByTime(150);
+    });
 
     // Should still be listening (auto-restarted)
     expect(result.current.isListening).toBe(true);
-    // Recognition.start should have been called again
     expect(mockInstance.start).toHaveBeenCalledTimes(2);
   });
 
@@ -81,7 +89,11 @@ describe("useSpeechRecognition", () => {
     act(() => result.current.start());
     act(() => result.current.stop());
 
-    // Now onend fires after stop — should NOT restart
+    // Advance timers to make sure no restart happens
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+
     expect(result.current.isListening).toBe(false);
     expect(mockInstance.start).toHaveBeenCalledTimes(1);
   });
@@ -98,10 +110,25 @@ describe("useSpeechRecognition", () => {
     act(() => {
       mockInstance.onend?.();
     });
+    act(() => {
+      jest.advanceTimersByTime(150);
+    });
 
     // Should still be listening — auto-restarted
     expect(result.current.isListening).toBe(true);
     expect(mockInstance.start).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows error when mic permission denied", () => {
+    const { result } = renderHook(() => useSpeechRecognition());
+    act(() => result.current.start());
+
+    act(() => {
+      mockInstance.onerror?.({ error: "not-allowed" });
+    });
+
+    expect(result.current.isListening).toBe(false);
+    expect(result.current.error).toMatch(/denied/i);
   });
 
   it("resets transcript when reset is called", () => {
